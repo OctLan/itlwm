@@ -11,7 +11,7 @@
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
 */
-/*    $OpenBSD: if_iwm.c,v 1.307 2020/04/09 21:36:50 stsp Exp $    */
+/*    $OpenBSD: if_iwm.c,v 1.313 2020/07/10 13:22:20 patrick Exp $    */
 
 /*
  * Copyright (c) 2014, 2016 genua gmbh <info@genua.de>
@@ -118,9 +118,10 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#include "itlwm.hpp"
 
-struct iwm_phy_db_entry * itlwm::
+#include "ItlIwm.hpp"
+
+struct iwm_phy_db_entry * ItlIwm::
 iwm_phy_db_get_section(struct iwm_softc *sc, uint16_t type, uint16_t chg_id)
 {
     struct iwm_phy_db *phy_db = &sc->sc_phy_db;
@@ -147,7 +148,7 @@ iwm_phy_db_get_section(struct iwm_softc *sc, uint16_t type, uint16_t chg_id)
     return NULL;
 }
 
-int itlwm::
+int ItlIwm::
 iwm_phy_db_set_section(struct iwm_softc *sc,
                        struct iwm_calib_res_notif_phy_db *phy_db_notif)
 {
@@ -177,7 +178,7 @@ iwm_phy_db_set_section(struct iwm_softc *sc,
     return 0;
 }
 
-int itlwm::
+int ItlIwm::
 iwm_phy_db_get_section_data(struct iwm_softc *sc, uint32_t type, uint8_t **data,
                             uint16_t *size, uint16_t ch_id)
 {
@@ -199,7 +200,7 @@ iwm_phy_db_get_section_data(struct iwm_softc *sc, uint32_t type, uint8_t **data,
     return 0;
 }
 
-int itlwm::
+int ItlIwm::
 iwm_send_phy_db_cmd(struct iwm_softc *sc, uint16_t type, uint16_t length,
                     void *data)
 {
@@ -221,7 +222,7 @@ iwm_send_phy_db_cmd(struct iwm_softc *sc, uint16_t type, uint16_t length,
     return iwm_send_cmd(sc, &cmd);
 }
 
-int itlwm::
+int ItlIwm::
 iwm_phy_db_send_all_channel_groups(struct iwm_softc *sc, uint16_t type,
                                    uint8_t max_ch_groups)
 {
@@ -248,7 +249,7 @@ iwm_phy_db_send_all_channel_groups(struct iwm_softc *sc, uint16_t type,
     return 0;
 }
 
-int itlwm::
+int ItlIwm::
 iwm_send_phy_db_data(struct iwm_softc *sc)
 {
     XYLog("%s\n", __FUNCTION__);
@@ -293,7 +294,7 @@ iwm_send_phy_db_data(struct iwm_softc *sc)
 #define IWM_ROC_TE_TYPE_NORMAL IWM_TE_P2P_DEVICE_DISCOVERABLE
 #define IWM_ROC_TE_TYPE_MGMT_TX IWM_TE_P2P_CLIENT_ASSOC
 
-int itlwm::
+int ItlIwm::
 iwm_send_time_event_cmd(struct iwm_softc *sc,
                         const struct iwm_time_event_cmd *cmd)
 {
@@ -335,7 +336,7 @@ out:
     return err;
 }
 
-void itlwm::
+void ItlIwm::
 iwm_protect_session(struct iwm_softc *sc, struct iwm_node *in,
                     uint32_t duration, uint32_t max_delay)
 {
@@ -371,7 +372,7 @@ iwm_protect_session(struct iwm_softc *sc, struct iwm_node *in,
     DELAY(100);
 }
 
-void itlwm::
+void ItlIwm::
 iwm_unprotect_session(struct iwm_softc *sc, struct iwm_node *in)
 {
     struct iwm_time_event_cmd time_cmd;
@@ -393,7 +394,7 @@ iwm_unprotect_session(struct iwm_softc *sc, struct iwm_node *in)
     DELAY(100);
 }
 
-int itlwm::
+int ItlIwm::
 iwm_send_phy_cfg_cmd(struct iwm_softc *sc)
 {
     XYLog("%s\n", __FUNCTION__);
@@ -410,7 +411,7 @@ iwm_send_phy_cfg_cmd(struct iwm_softc *sc)
                             sizeof(phy_cfg_cmd), &phy_cfg_cmd);
 }
 
-int itlwm::
+int ItlIwm::
 iwm_send_dqa_cmd(struct iwm_softc *sc)
 {
     struct iwm_dqa_enable_cmd dqa_cmd = {
@@ -422,7 +423,7 @@ iwm_send_dqa_cmd(struct iwm_softc *sc)
     return iwm_send_cmd_pdu(sc, cmd_id, 0, sizeof(dqa_cmd), &dqa_cmd);
 }
 
-int itlwm::
+int ItlIwm::
 iwm_binding_cmd(struct iwm_softc *sc, struct iwm_node *in, uint32_t action)
 {
     struct iwm_binding_cmd cmd;
@@ -459,7 +460,7 @@ iwm_binding_cmd(struct iwm_softc *sc, struct iwm_node *in, uint32_t action)
     return err;
 }
 
-int itlwm::
+int ItlIwm::
 iwm_send_cmd(struct iwm_softc *sc, struct iwm_host_cmd *hcmd)
 {
     struct iwm_tx_ring *ring = &sc->txq[sc->cmdqid];
@@ -638,7 +639,7 @@ out:
     return err;
 }
 
-int itlwm::
+int ItlIwm::
 iwm_send_cmd_pdu(struct iwm_softc *sc, uint32_t id, uint32_t flags,
                  uint16_t len, const void *data)
 {
@@ -652,7 +653,7 @@ iwm_send_cmd_pdu(struct iwm_softc *sc, uint32_t id, uint32_t flags,
     return iwm_send_cmd(sc, &cmd);
 }
 
-int itlwm::
+int ItlIwm::
 iwm_send_cmd_status(struct iwm_softc *sc, struct iwm_host_cmd *cmd,
                     uint32_t *status)
 {
@@ -684,7 +685,7 @@ iwm_send_cmd_status(struct iwm_softc *sc, struct iwm_host_cmd *cmd,
     return err;
 }
 
-int itlwm::
+int ItlIwm::
 iwm_send_cmd_pdu_status(struct iwm_softc *sc, uint32_t id, uint16_t len,
                         const void *data, uint32_t *status)
 {
@@ -697,7 +698,7 @@ iwm_send_cmd_pdu_status(struct iwm_softc *sc, uint32_t id, uint16_t len,
     return iwm_send_cmd_status(sc, &cmd, status);
 }
 
-void itlwm::
+void ItlIwm::
 iwm_free_resp(struct iwm_softc *sc, struct iwm_host_cmd *hcmd)
 {
     _KASSERT((hcmd->flags & (IWM_CMD_WANT_RESP)) == IWM_CMD_WANT_RESP);
@@ -705,7 +706,7 @@ iwm_free_resp(struct iwm_softc *sc, struct iwm_host_cmd *hcmd)
     hcmd->resp_pkt = NULL;
 }
 
-void itlwm::
+void ItlIwm::
 iwm_cmd_done(struct iwm_softc *sc, int qid, int idx, int code)
 {
     struct iwm_tx_ring *ring = &sc->txq[sc->cmdqid];

@@ -592,6 +592,7 @@ struct ieee80211_ess {
 #define	IEEE80211_F_BGSCAN	0x08000000	/* STATUS: background scan */
 #define IEEE80211_F_AUTO_JOIN	0x10000000	/* CONF: auto-join active */
 #define	IEEE80211_F_VHTON	0x20000000	/* CONF: VHT enabled */
+#define IEEE80211_F_DISABLE_BG_AUTO_CONNECT 0x40000000  /* CONF: disable auto connect to wifi when doing backgound scan */
 
 /* ic_xflags */
 #define	IEEE80211_F_TX_MGMT_ONLY 0x00000001	/* leave data frames on ifq */
@@ -621,15 +622,15 @@ struct ieee80211_ess {
 #define	IEEE80211_F_DONEGO	0x00000004	/* calc negotiated rate */
 #define	IEEE80211_F_DODEL	0x00000008	/* delete ignore rate */
 
-void	ieee80211_ifattach(struct ifnet *);
-void	ieee80211_ifdetach(struct ifnet *);
-void	ieee80211_channel_init(struct ifnet *);
-void	ieee80211_media_init(struct ifnet *);
-int	ieee80211_media_change(struct ifnet *);
-void	ieee80211_media_status(struct ifnet *, struct ifmediareq *);
-int	ieee80211_ioctl(struct ifnet *, u_long, caddr_t);
+void	ieee80211_ifattach(struct _ifnet *);
+void	ieee80211_ifdetach(struct _ifnet *);
+void	ieee80211_channel_init(struct _ifnet *);
+void	ieee80211_media_init(struct _ifnet *);
+int	ieee80211_media_change(struct _ifnet *);
+void	ieee80211_media_status(struct _ifnet *, struct ifmediareq *);
+int	ieee80211_ioctl(struct _ifnet *, u_long, caddr_t);
 int	ieee80211_get_rate(struct ieee80211com *);
-void	ieee80211_watchdog(struct ifnet *);
+void	ieee80211_watchdog(struct _ifnet *);
 int	ieee80211_fix_rate(struct ieee80211com *, struct ieee80211_node *, int);
 uint64_t	ieee80211_rate2media(struct ieee80211com *, int,
 		    enum ieee80211_phymode);
@@ -646,7 +647,7 @@ u_int	ieee80211_ieee2mhz(u_int, u_int);
 int	ieee80211_min_basic_rate(struct ieee80211com *);
 int	ieee80211_max_basic_rate(struct ieee80211com *);
 int	ieee80211_setmode(struct ieee80211com *, enum ieee80211_phymode);
-enum ieee80211_phymode ieee80211_next_mode(struct ifnet *);
+enum ieee80211_phymode ieee80211_next_mode(struct _ifnet *);
 enum ieee80211_phymode ieee80211_chan2mode(struct ieee80211com *,
 		const struct ieee80211_channel *);
 void	ieee80211_disable_wep(struct ieee80211com *); 
@@ -657,7 +658,7 @@ void	ieee80211_set_ess(struct ieee80211com *, struct ieee80211_ess *,
 	    struct ieee80211_node *);
 void    ieee80211_deselect_ess(struct ieee80211com *);
 struct ieee80211_ess *ieee80211_get_ess(struct ieee80211com *, const char *, int);
-void ieee80211_begin_cache_bgscan(struct ifnet *);
+void ieee80211_begin_cache_bgscan(struct _ifnet *);
 
 extern	int ieee80211_cache_size;
 

@@ -11,12 +11,105 @@
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
 */
+/*    $OpenBSD: if_iwx.c,v 1.43 2020/08/02 11:11:07 stsp Exp $    */
+
+/*
+ * Copyright (c) 2014, 2016 genua gmbh <info@genua.de>
+ *   Author: Stefan Sperling <stsp@openbsd.org>
+ * Copyright (c) 2014 Fixup Software Ltd.
+ * Copyright (c) 2017, 2019, 2020 Stefan Sperling <stsp@openbsd.org>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+/*-
+ * Based on BSD-licensed source modules in the Linux iwlwifi driver,
+ * which were used as the reference documentation for this implementation.
+ *
+ ******************************************************************************
+ *
+ * This file is provided under a dual BSD/GPLv2 license.  When using or
+ * redistributing this file, you may do so under either license.
+ *
+ * GPL LICENSE SUMMARY
+ *
+ * Copyright(c) 2017 Intel Deutschland GmbH
+ * Copyright(c) 2018 - 2019 Intel Corporation
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * BSD LICENSE
+ *
+ * Copyright(c) 2017 Intel Deutschland GmbH
+ * Copyright(c) 2018 - 2019 Intel Corporation
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *  * Neither the name Intel Corporation nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************
+ */
+
+/*-
+ * Copyright (c) 2007-2010 Damien Bergamini <damien.bergamini@free.fr>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 #ifndef _ITLWMX_H
 #define _ITLWMX_H
 #include "compat.h"
 #include "kernel.h"
 
-#include "itlwmx_interface.hpp"
 #include <sys/param.h>
 #include <sys/conf.h>
 #include <sys/kernel.h>
@@ -44,68 +137,37 @@
 #include <libkern/c++/OSMetaClass.h>
 #include <IOKit/IOFilterInterruptEventSource.h>
 
-enum
-{
-    kPowerStateOff = 0,
-    kPowerStateOn,
-    kPowerStateCount
-};
+#include <HAL/ItlHalService.hpp>
+#include <HAL/ItlDriverInfo.hpp>
+#include <HAL/ItlDriverController.hpp>
 
-class itlwmx : public IOEthernetController {
-    OSDeclareDefaultStructors(itlwmx)
+class ItlIwx : public ItlHalService, ItlDriverInfo, ItlDriverController {
+    OSDeclareDefaultStructors(ItlIwx)
     
 public:
     
     //kext
-    bool init(OSDictionary *properties) override;
     void free() override;
-    IOService* probe(IOService* provider, SInt32* score) override;
-    bool start(IOService *provider) override;
-    void stop(IOService *provider) override;
-    IOReturn getHardwareAddress(IOEthernetAddress* addrP) override;
+    virtual bool attach(IOPCIDevice *device) override;
+    virtual void detach(IOPCIDevice *device) override;
     IOReturn enable(IONetworkInterface *netif) override;
     IOReturn disable(IONetworkInterface *netif) override;
-    UInt32 outputPacket(mbuf_t, void * param) override;
-    IOReturn setPromiscuousMode(IOEnetPromiscuousMode mode) override;
-    IOReturn setMulticastMode(IOEnetMulticastMode mode) override;
-    IOReturn setMulticastList(IOEthernetAddress* addr, UInt32 len) override;
-    virtual const OSString * newVendorString() const override;
-    virtual const OSString * newModelString() const override;
-    virtual IOReturn getMaxPacketSize(UInt32* maxSize) const override;
-    virtual IONetworkInterface * createInterface() override;
-    virtual UInt32 getFeatures() const override;
+    virtual struct ieee80211com *get80211Controller() override;
     
-    bool configureInterface(IONetworkInterface *netif) override;
-    static IOReturn tsleepHandler(OSObject* owner, void* arg0 = 0, void* arg1 = 0, void* arg2 = 0, void* arg3 = 0);
-    int tsleep_nsec(void *ident, int priority, const char *wmesg, int timo);
-    void wakeupOn(void* ident);
     static bool intrFilter(OSObject *object, IOFilterInterruptEventSource *src);
-    static IOReturn _iwm_start_task(OSObject *target, void *arg0, void *arg1, void *arg2, void *arg3);
-    virtual bool createWorkLoop() override;
-    virtual IOWorkLoop* getWorkLoop() const override;
-    void watchdogAction(IOTimerEventSource *timer);
     static IOReturn _iwx_start_task(OSObject *target, void *arg0, void *arg1, void *arg2, void *arg3);
     
-    virtual IOReturn getPacketFilters(const OSSymbol *group, UInt32 *filters) const override;
-    bool createMediumTables(const IONetworkMedium **primary);
-    virtual IOReturn selectMedium(const IONetworkMedium *medium) override;
+    virtual ItlDriverInfo *getDriverInfo() override;
     
-    bool initPCIPowerManagment(IOPCIDevice *provider);
+    virtual ItlDriverController *getDriverController() override;
     
-    struct ifnet *getIfp();
-    struct iwx_softc *getSoft();
-    IOEthernetInterface *getNetworkInterface();
+    //driver info
+    virtual char *getFirmwareVersion() override;
     
-    //-----------------------------------------------------------------------
-    // Power management support.
-    //-----------------------------------------------------------------------
-    virtual IOReturn registerWithPolicyMaker( IOService * policyMaker ) override;
-    virtual IOReturn setPowerState( unsigned long powerStateOrdinal,
-                                    IOService *   policyMaker) override;
-    virtual IOReturn setWakeOnMagicPacket( bool active ) override;
-    void setPowerStateOff(void);
-    void setPowerStateOn(void);
-    void unregistPM();
+    virtual int16_t getBSSNoise() override;
+    
+    //driver controller
+    virtual void clearScanningFlags() override;
     
     void releaseAll();
     void joinSSID(const char *ssid, const char *pwd);
@@ -114,7 +176,7 @@ public:
     //utils
     static void *mallocarray(size_t, size_t, int, int);
     
-    static void onLoadFW(OSKextRequestTag requestTag, OSReturn result, const void *resourceData, uint32_t resourceDataLength, void *context);
+//    static void onLoadFW(OSKextRequestTag requestTag, OSReturn result, const void *resourceData, uint32_t resourceDataLength, void *context);
     
     uint8_t    iwx_lookup_cmd_ver(struct iwx_softc *, uint8_t, uint8_t);
     int    iwx_is_mimo_ht_plcp(uint8_t);
@@ -312,7 +374,7 @@ public:
            struct ieee80211_key *);
     static void    iwx_delete_key(struct ieee80211com *,
            struct ieee80211_node *, struct ieee80211_key *);
-    int    iwx_media_change(struct ifnet *);
+    int    iwx_media_change(struct _ifnet *);
     static void    iwx_newstate_task(void *);
     static int    iwx_newstate(struct ieee80211com *, enum ieee80211_state, int);
     void    iwx_endscan(struct iwx_softc *);
@@ -324,11 +386,11 @@ public:
     int    iwx_send_update_mcc_cmd(struct iwx_softc *, const char *);
     int    iwx_send_temp_report_ths_cmd(struct iwx_softc *);
     int    iwx_init_hw(struct iwx_softc *);
-    int    iwx_init(struct ifnet *);
-    static void    iwx_start(struct ifnet *);
-    void    iwx_stop(struct ifnet *);
-    static void    iwx_watchdog(struct ifnet *);
-    static int    iwx_ioctl(struct ifnet *, u_long, caddr_t);
+    int    iwx_init(struct _ifnet *);
+    static void    iwx_start(struct _ifnet *);
+    void    iwx_stop(struct _ifnet *);
+    static void    iwx_watchdog(struct _ifnet *);
+    static int    iwx_ioctl(struct _ifnet *, u_long, caddr_t);
     const char *iwx_desc_lookup(uint32_t);
     void    iwx_nic_error(struct iwx_softc *);
     void    iwx_nic_umac_error(struct iwx_softc *);
@@ -338,7 +400,7 @@ public:
     void    iwx_notif_intr(struct iwx_softc *);
     static int    iwx_intr(OSObject *object, IOInterruptEventSource* sender, int count);
     static int    iwx_intr_msix(OSObject *object, IOInterruptEventSource* sender, int count);
-    int    iwx_match(IOPCIDevice *);
+    static int    iwx_match(IOPCIDevice *);
     int    iwx_preinit(struct iwx_softc *);
     void    iwx_attach_hook(struct device *);
     bool    iwx_attach(struct iwx_softc *, struct pci_attach_args *);
@@ -348,30 +410,8 @@ public:
     
 public:
     IOInterruptEventSource* fInterrupt;
-    IOTimerEventSource *watchdogTimer;
     struct pci_attach_args pci;
     struct iwx_softc com;
-    itlwmx_interface *fNetIf;
-    IONetworkStats *fpNetStats;
-    IOWorkLoop *fWatchdogWorkLoop;
-    
-    IOLock *_fwLoadLock;
-    void *lastSleepChan;
-    
-    //pm
-    thread_call_t powerOnThreadCall;
-    thread_call_t powerOffThreadCall;
-    UInt32 pmPowerState;
-    IOService *pmPolicyMaker;
-    UInt8 pmPCICapPtr;
-    bool magicPacketEnabled;
-    bool magicPacketSupported;
-};
-
-struct ResourceCallbackContext
-{
-    itlwmx* context;
-    OSData* resource;
 };
 
 #endif

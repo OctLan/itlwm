@@ -12,26 +12,14 @@
 * GNU General Public License for more details.
 */
 
-#ifndef itlwmx_interface_hpp
-#define itlwmx_interface_hpp
+#ifndef ItlDriverController_h
+#define ItlDriverController_h
 
-#include "itlwmx_interface.hpp"
-
-#include <IOKit/network/IOEthernetInterface.h>
-
-#define ETHERNET_MTU            1500
-
-class itlwmx_interface : public IOEthernetInterface {
-    OSDeclareDefaultStructors( itlwmx_interface )
+class ItlDriverController {
     
 public:
-    virtual bool init( IONetworkController * controller ) APPLE_KEXT_OVERRIDE;
     
-protected:
-    
-    virtual void free() APPLE_KEXT_OVERRIDE;
-    
-    virtual bool setMaxTransferUnit(UInt32 mtu) APPLE_KEXT_OVERRIDE;
+    virtual void clearScanningFlags() = 0;
 };
 
-#endif /* itlwmx_interface_hpp */
+#endif /* ItlDriverController_h */

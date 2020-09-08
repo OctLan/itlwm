@@ -54,7 +54,7 @@
 #define	IEEE80211_TRANS_WAIT	5		/* transition wait */
 #define	IEEE80211_INACT_WAIT	5		/* inactivity timer interval */
 #define	IEEE80211_INACT_MAX	(300/IEEE80211_INACT_WAIT)
-#define	IEEE80211_CACHE_SIZE	100
+#define	IEEE80211_CACHE_SIZE	200
 #define	IEEE80211_CACHE_WAIT	30
 #define	IEEE80211_INACT_SCAN	10		/* for station mode */
 
@@ -504,14 +504,14 @@ struct ieee80211com;
 
 typedef void ieee80211_iter_func(void *, struct ieee80211_node *);
 
-void ieee80211_node_attach(struct ifnet *);
-void ieee80211_node_lateattach(struct ifnet *);
-void ieee80211_node_detach(struct ifnet *);
+void ieee80211_node_attach(struct _ifnet *);
+void ieee80211_node_lateattach(struct _ifnet *);
+void ieee80211_node_detach(struct _ifnet *);
 
-void ieee80211_begin_scan(struct ifnet *);
-void ieee80211_next_scan(struct ifnet *);
-void ieee80211_end_scan(struct ifnet *);
-void ieee80211_reset_scan(struct ifnet *);
+void ieee80211_begin_scan(struct _ifnet *);
+void ieee80211_next_scan(struct _ifnet *);
+void ieee80211_end_scan(struct _ifnet *);
+void ieee80211_reset_scan(struct _ifnet *);
 struct ieee80211_node *ieee80211_alloc_node(struct ieee80211com *,
 		const u_int8_t *);
 struct ieee80211_node *ieee80211_dup_bss(struct ieee80211com *,

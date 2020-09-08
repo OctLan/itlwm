@@ -11,8 +11,7 @@
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
 */
-
-/*    $OpenBSD: if_iwxreg.h,v 1.6 2020/05/26 11:59:48 stsp Exp $    */
+/*    $OpenBSD: if_iwxreg.h,v 1.17 2020/08/01 16:14:05 stsp Exp $    */
 
 /*-
  * Based on BSD-licensed source modules in the Linux iwlwifi driver,
@@ -71,7 +70,6 @@
  *
  *****************************************************************************
  */
-
 
 /* maximmum number of DRAM map entries supported by FW */
 #define IWX_MAX_DRAM_ENTRY    64
@@ -801,7 +799,7 @@ struct iwx_context_info {
 /*
  * Causes for the FH register interrupts
  */
-enum msix_fh_int_causes {
+enum iwx_msix_fh_int_causes {
     IWX_MSIX_FH_INT_CAUSES_Q0        = (1 << 0),
     IWX_MSIX_FH_INT_CAUSES_Q1        = (1 << 1),
     IWX_MSIX_FH_INT_CAUSES_D2S_CH0_NUM    = (1 << 16),
@@ -813,7 +811,7 @@ enum msix_fh_int_causes {
 /*
  * Causes for the HW register interrupts
  */
-enum msix_hw_int_causes {
+enum iwx_msix_hw_int_causes {
     IWX_MSIX_HW_INT_CAUSES_REG_ALIVE    = (1 << 0),
     IWX_MSIX_HW_INT_CAUSES_REG_WAKEUP    = (1 << 1),
     IWX_MSIX_HW_INT_CAUSES_REG_IPC        = (1 << 1),
@@ -832,7 +830,7 @@ enum msix_hw_int_causes {
 /*
  * Registers to map causes to vectors
  */
-enum msix_ivar_for_cause {
+enum iwx_msix_ivar_for_cause {
     IWX_MSIX_IVAR_CAUSE_D2S_CH0_NUM        = 0x0,
     IWX_MSIX_IVAR_CAUSE_D2S_CH1_NUM        = 0x1,
     IWX_MSIX_IVAR_CAUSE_S2D            = 0x3,

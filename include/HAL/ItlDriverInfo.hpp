@@ -12,18 +12,16 @@
 * GNU General Public License for more details.
 */
 
-#include "itlwm.hpp"
-#include <IOKit/IOLib.h>
+#ifndef ItlDriverInfo_h
+#define ItlDriverInfo_h
 
-int itlwm::
-iwm_send_bt_init_conf(struct iwm_softc *sc)
-{
-    XYLog("%s\n", __FUNCTION__);
-    struct iwm_bt_coex_cmd bt_cmd;
+class ItlDriverInfo {
     
-    bt_cmd.mode = htole32(IWM_BT_COEX_WIFI);
-    bt_cmd.enabled_modules = htole32(IWM_BT_COEX_HIGH_BAND_RET);
+public:
     
-    return iwm_send_cmd_pdu(sc, IWM_BT_CONFIG, 0, sizeof(bt_cmd),
-                            &bt_cmd);
-}
+    virtual char *getFirmwareVersion() = 0;
+    
+    virtual int16_t getBSSNoise() = 0;
+};
+
+#endif /* ItlDriverInfo_h */

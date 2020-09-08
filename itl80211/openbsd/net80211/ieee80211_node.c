@@ -182,7 +182,7 @@ ieee80211_print_ess(struct ieee80211_ess *ess)
 void
 ieee80211_print_ess_list(struct ieee80211com *ic)
 {
-    struct ifnet		*ifp = &ic->ic_if;
+    struct _ifnet		*ifp = &ic->ic_if;
     struct ieee80211_ess	*ess;
     
     XYLog("%s: known networks\n", ifp->if_xname);
@@ -513,7 +513,7 @@ int
 ieee80211_ess_is_better(struct ieee80211com *ic,
                         struct ieee80211_node *nicur, struct ieee80211_node *nican)
 {
-    struct ifnet		*ifp = &ic->ic_if;
+    struct _ifnet		*ifp = &ic->ic_if;
     int			 score_cur = 0, score_can = 0;
     int			 cur_rssi, can_rssi;
     
@@ -584,7 +584,7 @@ void
 ieee80211_switch_ess(struct ieee80211com *ic)
 {
     XYLog("%s\n", __FUNCTION__);
-    struct ifnet		*ifp = &ic->ic_if;
+    struct _ifnet		*ifp = &ic->ic_if;
     struct ieee80211_ess	*ess, *seless = NULL;
     struct ieee80211_node	*ni, *selni = NULL;
     
@@ -702,7 +702,7 @@ ieee80211_deselect_ess(struct ieee80211com *ic)
 }
 
 void
-ieee80211_node_attach(struct ifnet *ifp)
+ieee80211_node_attach(struct _ifnet *ifp)
 {
     struct ieee80211com *ic = (struct ieee80211com *)ifp;
 #ifndef IEEE80211_STA_ONLY
@@ -762,7 +762,7 @@ ieee80211_alloc_node_helper(struct ieee80211com *ic)
 }
 
 void
-ieee80211_node_lateattach(struct ifnet *ifp)
+ieee80211_node_lateattach(struct _ifnet *ifp)
 {
     struct ieee80211com *ic = (struct ieee80211com *)ifp;
     struct ieee80211_node *ni;
@@ -779,7 +779,7 @@ ieee80211_node_lateattach(struct ifnet *ifp)
 }
 
 void
-ieee80211_node_detach(struct ifnet *ifp)
+ieee80211_node_detach(struct _ifnet *ifp)
 {
     XYLog("%s\n", __FUNCTION__);
     struct ieee80211com *ic = (struct ieee80211com *)ifp;
@@ -814,7 +814,7 @@ ieee80211_node_detach(struct ifnet *ifp)
  * of available channels and the current PHY mode.
  */
 void
-ieee80211_reset_scan(struct ifnet *ifp)
+ieee80211_reset_scan(struct _ifnet *ifp)
 {
     XYLog("%s\n", __FUNCTION__);
     struct ieee80211com *ic = (struct ieee80211com *)ifp;
@@ -843,7 +843,7 @@ ieee80211_node_raise_inact(void *arg, struct ieee80211_node *ni)
  * Begin an active scan.
  */
 void
-ieee80211_begin_scan(struct ifnet *ifp)
+ieee80211_begin_scan(struct _ifnet *ifp)
 {
     XYLog("%s\n", __FUNCTION__);
     struct ieee80211com *ic = (struct ieee80211com *)ifp;
@@ -892,7 +892,7 @@ ieee80211_begin_scan(struct ifnet *ifp)
  * Switch to the next channel marked for scanning.
  */
 void
-ieee80211_next_scan(struct ifnet *ifp)
+ieee80211_next_scan(struct _ifnet *ifp)
 {
     struct ieee80211com *ic = (struct ieee80211com *)ifp;
     struct ieee80211_channel *chan;
@@ -929,7 +929,7 @@ ieee80211_create_ibss(struct ieee80211com* ic, struct ieee80211_channel *chan)
 {
     XYLog("%s\n", __FUNCTION__);
     struct ieee80211_node *ni;
-    struct ifnet *ifp = &ic->ic_if;
+    struct _ifnet *ifp = &ic->ic_if;
     
     ni = ic->ic_bss;
     if (ifp->if_flags & IFF_DEBUG)
@@ -1127,7 +1127,7 @@ ieee80211_match_bss(struct ieee80211com *ic, struct ieee80211_node *ni,
             fail |= IEEE80211_NODE_ASSOCFAIL_WPA_PROTO;
     }
     
-    if (ic->ic_if.if_flags & IFF_DEBUG) {
+    if (ic->ic_if.if_flags & IFF_DEBUG && ieee80211_debug) {
         DPRINTF(("%s: %c %s%c", ic->ic_if.if_xname, fail ? '-' : '+',
               ether_sprintf(ni->ni_bssid),
               fail & IEEE80211_NODE_ASSOCFAIL_BSSID ? '!' : ' '));
@@ -1175,7 +1175,7 @@ struct ieee80211_node_switch_bss_arg {
 void
 ieee80211_node_switch_bss(struct ieee80211com *ic, struct ieee80211_node *ni)
 {
-    struct ifnet *ifp = &ic->ic_if;
+    struct _ifnet *ifp = &ic->ic_if;
     struct ieee80211_node_switch_bss_arg *sba = (struct ieee80211_node_switch_bss_arg *)ni->ni_unref_arg;
     struct ieee80211_node *curbs, *selbs;
     
@@ -1371,7 +1371,7 @@ ieee80211_node_choose_bss(struct ieee80211com *ic, int bgscan,
  * Complete a scan of potential channels.
  */
 void
-ieee80211_end_scan(struct ifnet *ifp)
+ieee80211_end_scan(struct _ifnet *ifp)
 {
     struct ieee80211com *ic = (struct ieee80211com *)ifp;
     struct ieee80211_node *ni, *selbs = NULL, *curbs = NULL;
@@ -1461,6 +1461,7 @@ ieee80211_end_scan(struct ifnet *ifp)
         /* AP disappeared? Should not happen. */
         if (selbs == NULL || curbs == NULL) {
             ic->ic_flags &= ~IEEE80211_F_BGSCAN;
+            ic->ic_flags &= ~IEEE80211_F_DISABLE_BG_AUTO_CONNECT;
             goto notfound;
         }
         
@@ -1473,6 +1474,7 @@ ieee80211_end_scan(struct ifnet *ifp)
             if (ic->ic_bgscan_fail < IEEE80211_BGSCAN_FAIL_MAX)
                 ic->ic_bgscan_fail++;
             ic->ic_flags &= ~IEEE80211_F_BGSCAN;
+            ic->ic_flags &= ~IEEE80211_F_DISABLE_BG_AUTO_CONNECT;
             /*
               * HT is negotiated during association so we must use
               * ic_bss to check HT. The nodes tree was re-populated
@@ -1489,10 +1491,12 @@ ieee80211_end_scan(struct ifnet *ifp)
                      ieee80211_chan2mode(ic, ni->ni_chan));
             return;
         }
-        //zxy disable roam when doing background scanning, because it will cause too much problems.
-#ifndef BGSCAN_ROAM
-        goto notfound;
-#else
+        
+        if (ic->ic_flags & IEEE80211_F_DISABLE_BG_AUTO_CONNECT) {
+            ic->ic_flags &= ~IEEE80211_F_BGSCAN;
+            ic->ic_flags &= ~IEEE80211_F_DISABLE_BG_AUTO_CONNECT;
+            return;
+        }
         
         arg = (struct ieee80211_node_switch_bss_arg *)_MallocZero(sizeof(*arg));
         if (arg == NULL) {
@@ -1530,7 +1534,6 @@ ieee80211_end_scan(struct ifnet *ifp)
         ic->ic_bss->ni_unref_cb = ieee80211_node_switch_bss;
         /* F_BGSCAN flag gets cleared in ieee80211_node_join_bss(). */
         return;
-#endif //BGSCAN_ROAM
     } else if (selbs == NULL)
         goto notfound;
     
@@ -2155,7 +2158,7 @@ ieee80211_clean_nodes(struct ieee80211com *ic, int cache_timeout)
     int s;
 #ifndef IEEE80211_STA_ONLY
     int nnodes = 0, nonht = 0, nonhtassoc = 0;
-    struct ifnet *ifp = &ic->ic_if;
+    struct _ifnet *ifp = &ic->ic_if;
     enum ieee80211_htprot htprot = IEEE80211_HTPROT_NONE;
     enum ieee80211_protmode protmode = IEEE80211_PROT_NONE;
 #endif
@@ -3013,7 +3016,7 @@ ieee80211_notify_dtim(struct ieee80211com *ic)
 {
     /* NB: group addressed MSDUs are buffered in ic_bss */
     struct ieee80211_node *ni = ic->ic_bss;
-    struct ifnet *ifp = &ic->ic_if;
+    struct _ifnet *ifp = &ic->ic_if;
     struct ieee80211_frame *wh;
     mbuf_t m;
     
